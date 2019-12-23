@@ -1,0 +1,65 @@
+- name: creating the APP layer
+  hosts: TEST
+  become: yes
+  tags:
+    - APP
+  vars: 
+    tomcat_url: http://mirrors.estointernet.in/apache/tomcat/tomcat-9/v9.0.27/bin/apache-tomcat-9.0.27.tar.gz
+    WAR:
+      url: https://github.com/mershajr/Development-files/raw/master/APPSTACK/student.war
+      loc: "/opt/{{tomcat_dir}}/webapps"
+    Mysql_JAR:
+      url: https://github.com/mershajr/Development-files/raw/master/APPSTACK/mysql-connector-java-5.1.40.jar
+      loc: "/opt/{{tomcat_dir}}/lib"
+  gather_facts: no
+  tasks:
+    - name: downloading the tomcat package
+      unarchive:
+         src: "{{tomcat_url}}"
+         dest: /opt
+         remote_src: yes 
+    - name: download and install jave
+      yum: 
+        name: java
+        state: latest
+    - name: Defining the tomcat directory
+      shell: echo "{{tomcat_url}}" | awk -F / '{print $NF}' | sed -e 's/.tar.gz//'
+      register: output
+    - name: printing the output
+      debug:
+        msg: "{{output}}"
+    - name: create the tomcat_dir directory
+      set_fact:
+        tomcat_dir: "{{output.stdout}}"
+    - name: printing the tomcat directory
+      debug:
+        msg: "{{tomcat_dir}}"
+    - name: find all the  files in webapps folder
+      find:
+        path: /opt/{{tomcat_dir}}/webapps
+        #patterns: '*.text'
+        file_type: any
+        #recurse: yes
+      register: out
+    - name: removing all the files ion webapps
+      file:
+        path: "{{item.path}}"
+        state: absent
+      loop: "{{out.files}}"
+    - name: Downloading the student.war and mysql connector.jar
+      get_url:
+        url: "{{item.url}}"
+        dest: "{{item.loc}}"
+      with_items:
+        - "{{WAR}}"
+        - "{{Mysql_JAR}}"
+    - name: update the context.xml
+      blockinfile:
+         path: /opt/{{tomcat_dir}}/conf/context.xml
+         block: |
+            <Resource name="jdbc/TestDB" auth="Container" type="javax.sql.DataSource" maxTotal="100" maxIdle="30" maxWaitMillis="10000" username="student" password="student@1" driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://10.160.15.196:3306/studentapp"/>
+         insertbefore: </Context>
+    - name: restarting the applciation
+      shell: "nohup sh /opt/{{tomcat_dir}}/bin/shutdown.sh && nohup sh /opt/{{tomcat_dir}}/bin/startup.sh"
+    #- name: starting the applciation
+    #  shell: "nohup sh /opt/{{tomcat_dir}}/bin/startup.sh"
