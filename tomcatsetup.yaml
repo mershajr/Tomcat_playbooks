@@ -1,5 +1,5 @@
 - name: creating the APP layer
-  hosts: TEST
+  hosts: DEV
   become: yes
   tags:
     - APP
