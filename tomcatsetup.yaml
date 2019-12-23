@@ -4,7 +4,8 @@
   tags:
     - APP
   vars: 
-    tomcat_url: http://mirrors.estointernet.in/apache/tomcat/tomcat-9/v9.0.27/bin/apache-tomcat-9.0.27.tar.gz
+    tomcat_url: http://apachemirror.wuchna.com/tomcat/tomcat-9/v9.0.30/bin/apache-tomcat-9.0.30.tar.gz
+
     WAR:
       url: https://github.com/mershajr/Development-files/raw/master/APPSTACK/student.war
       loc: "/opt/{{tomcat_dir}}/webapps"
